@@ -1,0 +1,57 @@
+name: Build Windows App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/build-windows.yml"
+      - "AgatikaWindows.spec"
+      - "app/**"
+      - "services/**"
+      - "assets/**"
+      - "requirements.txt"
+      - "run.py"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt pyinstaller
+
+      - name: Download bundled Argos model
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path assets/argos | Out-Null
+          python -c "import shutil; from pathlib import Path; import argostranslate.package as p; p.update_package_index(); pkg=next(x for x in p.get_available_packages() if x.from_code=='en' and x.to_code=='ru'); downloaded=Path(pkg.download()); target=Path('assets/argos') / 'en_ru.argosmodel'; shutil.copyfile(downloaded, target); print(target)"
+
+      - name: Build Windows executable
+        shell: pwsh
+        run: |
+          $env:PYINSTALLER_CONFIG_DIR = Join-Path $PWD ".pyinstaller"
+          pyinstaller AgatikaWindows.spec --noconfirm
+
+      - name: Package distribution
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist/Переводчик Агатика" -DestinationPath "dist/agatika-windows.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agatika-windows
+          path: dist/agatika-windows.zip

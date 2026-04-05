@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.config import APP_NAME, DEFAULT_OUTPUT_DIR, MODEL_PRESETS
+from app.config import APP_NAME, DEFAULT_OUTPUT_DIR, MODEL_PRESETS, get_resource_path
 from app.core.worker import ProcessingWorker
 from app.models import AudioFileInfo, ExportOptions, ProcessingRequest, ProcessingResult
 from app.utils.format_utils import format_bytes, format_estimate_window
@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
         return group
 
     def _apply_style(self) -> None:
-        styles_path = Path(__file__).with_name("main_window.qss")
+        styles_path = get_resource_path("app/ui/main_window.qss")
         self.setStyleSheet(styles_path.read_text(encoding="utf-8"))
 
     def _set_default_output_dir(self) -> None:

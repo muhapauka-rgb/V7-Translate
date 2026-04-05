@@ -1,27 +1,51 @@
 from setuptools import setup
 
+from app.config import APP_NAME
+
 APP = ["run.py"]
 OPTIONS = {
     "argv_emulation": False,
     "packages": [
         "app",
         "services",
-        "PySide6",
         "docx",
         "faster_whisper",
         "argostranslate",
     ],
+    "includes": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "PySide6.QtPrintSupport",
+    ],
+    "excludes": [
+        "PySide6.examples",
+        "PySide6.support",
+        "PySide6.scripts",
+        "tkinter",
+        "test",
+        "tests",
+        "pytest",
+    ],
+    "resources": [
+        "app/ui/main_window.qss",
+        "app/ui/INTERFACE_GUIDE.md",
+    ],
     "plist": {
-        "CFBundleName": "Audio Lesson Transcriber RU",
-        "CFBundleDisplayName": "Audio Lesson Transcriber RU",
-        "CFBundleIdentifier": "com.v7translate.audio-lesson-transcriber-ru",
+        "CFBundleName": APP_NAME,
+        "CFBundleDisplayName": APP_NAME,
+        "CFBundleIdentifier": "com.muhapauka.agatika-translator",
+        "CFBundleShortVersionString": "1.0.0",
+        "CFBundleVersion": "1",
+        "NSHighResolutionCapable": True,
+        "LSApplicationCategoryType": "public.app-category.productivity",
         "LSMinimumSystemVersion": "12.0",
     },
 }
 
 setup(
     app=APP,
-    name="Audio Lesson Transcriber RU",
+    name=APP_NAME,
     options={"py2app": OPTIONS},
     setup_requires=["py2app"],
 )

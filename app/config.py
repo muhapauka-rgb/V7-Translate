@@ -1,13 +1,32 @@
+import os
+import sys
 from pathlib import Path
 
 APP_NAME = "Переводчик Агатика"
 BASE_DIR = Path(__file__).resolve().parent.parent
-STATE_DIR = BASE_DIR / ".local_state"
-TEMP_DIR = BASE_DIR / "temp"
 DEFAULT_OUTPUT_DIR = Path.home() / "Downloads" if (Path.home() / "Downloads").exists() else BASE_DIR / "output"
-ESTIMATE_HISTORY_PATH = STATE_DIR / "estimate_history.json"
 
 SUPPORTED_EXTENSIONS = {".mp3", ".m4a", ".wav", ".mp4", ".mov"}
+
+
+def _get_user_data_dir() -> Path:
+    if sys.platform.startswith("win"):
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            return Path(appdata) / "AgatikaTranslator"
+    return Path.home() / ".agatika_translator"
+
+
+USER_DATA_DIR = _get_user_data_dir()
+STATE_DIR = USER_DATA_DIR / "state"
+TEMP_DIR = USER_DATA_DIR / "temp"
+ESTIMATE_HISTORY_PATH = STATE_DIR / "estimate_history.json"
+
+
+def get_resource_path(relative_path: str) -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / relative_path
+    return BASE_DIR / relative_path
 
 MODEL_PRESETS = {
     "Быстро": {

@@ -152,16 +152,49 @@ python run.py
 
 ## Упаковка в macOS `.app`
 
-В проект добавлен `setup.py` для `py2app`.
+Для сборки macOS-приложения используется `PyInstaller`.
 
 Сборка:
 
 ```bash
-pip install py2app
-python setup.py py2app
+pip install pyinstaller
+pyinstaller Agatika.spec --noconfirm
 ```
 
-Результат появится в папке `dist/`.
+Результат появится в папке `dist/Переводчик Агатика.app`.
+
+Установка как обычного приложения macOS:
+
+1. Собрать `.app` через `PyInstaller`.
+2. Переместить `dist/Переводчик Агатика.app` в папку `Приложения`.
+3. Запустить приложение из `Приложений`.
+4. Если нужно держать его в Dock, кликнуть правой кнопкой по иконке в Dock:
+   `Параметры -> Оставить в Dock`.
+
+## Сборка для Windows `.exe`
+
+Для Windows в проект добавлена автоматическая сборка через GitHub Actions:
+
+- workflow: `.github/workflows/build-windows.yml`
+- spec-файл: `AgatikaWindows.spec`
+
+Что происходит при сборке:
+
+1. Ставятся зависимости проекта.
+2. Скачивается языковая модель Argos Translate `en -> ru`.
+3. Собирается Windows-версия приложения через `PyInstaller`.
+4. Готовая папка приложения упаковывается в `agatika-windows.zip`.
+
+Как передать другу:
+
+1. Скачать артефакт `agatika-windows` из GitHub Actions.
+2. Распаковать архив.
+3. Запустить `Переводчик Агатика.exe`.
+
+Примечание:
+
+- Windows-сборка создаётся на GitHub в среде Windows.
+- На macOS напрямую собрать нативный `.exe` нельзя, поэтому используется GitHub Actions.
 
 ## Примечания по распознаванию и переводу
 

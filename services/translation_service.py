@@ -1,6 +1,8 @@
+from pathlib import Path
 import re
 from typing import Callable, Optional
 
+from app.config import get_resource_path
 from app.core.cancellation import CancellationToken
 from app.core.errors import UserFacingError
 from app.models import Segment
@@ -46,6 +48,7 @@ class TranslationService:
     @staticmethod
     def _build_argos_translator():
         try:
+            import argostranslate.package
             import argostranslate.translate
         except ImportError as exc:
             raise UserFacingError(
@@ -54,6 +57,10 @@ class TranslationService:
             ) from exc
 
         TranslationService._patch_argos_translation(argostranslate.translate)
+        TranslationService._install_bundled_argos_model(
+            argostranslate_package_module=argostranslate.package,
+            argostranslate_translate_module=argostranslate.translate,
+        )
 
         languages = argostranslate.translate.get_installed_languages()
         from_language = next((language for language in languages if language.code == "en"), None)
@@ -127,6 +134,44 @@ class TranslationService:
 
         argos_translate_module.apply_packaged_translation = safe_apply_packaged_translation
         TranslationService._argos_patched = True
+
+    @staticmethod
+    def _install_bundled_argos_model(
+        argostranslate_package_module,
+        argostranslate_translate_module,
+    ) -> None:
+        installed_languages = argostranslate_translate_module.get_installed_languages()
+        has_en_ru = False
+        for language in installed_languages:
+            if language.code != "en":
+                continue
+            has_en_ru = any(translation.to_lang.code == "ru" for translation in language.translations_from)
+            if has_en_ru:
+                break
+
+        if has_en_ru:
+            return
+
+        package_path = TranslationService._find_bundled_argos_model()
+        if package_path is None:
+            return
+
+        try:
+            argostranslate_package_module.install_from_path(str(package_path))
+        except Exception:
+            return
+
+    @staticmethod
+    def _find_bundled_argos_model() -> Optional[Path]:
+        assets_dir = get_resource_path("assets/argos")
+        if not assets_dir.exists():
+            return None
+
+        package_files = sorted(assets_dir.glob("*.argosmodel"))
+        if not package_files:
+            return None
+
+        return package_files[0]
 
     @staticmethod
     def _split_text_for_argos(text: str) -> list[str]:
