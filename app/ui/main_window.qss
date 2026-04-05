@@ -1,0 +1,152 @@
+QMainWindow {
+    background: #f3f4f6;
+}
+
+QWidget {
+    font-size: 13px;
+}
+
+QDialog {
+    background: #ffffff;
+}
+
+QGroupBox {
+    background: #ffffff;
+    border: 1px solid #dfe3e8;
+    border-radius: 14px;
+    margin-top: 10px;
+    font-weight: 600;
+    color: #1f2937;
+    padding-top: 12px;
+}
+
+QGroupBox::title {
+    left: 14px;
+    padding: 0 8px 0 8px;
+    color: #334155;
+    background: #ffffff;
+}
+
+QLabel, QCheckBox {
+    color: #243041;
+    font-size: 12px;
+}
+
+QLineEdit, QComboBox, QPlainTextEdit {
+    background: #fbfcfe;
+    border: 1px solid #d5dbe3;
+    border-radius: 9px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: #1f2937;
+}
+
+QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus {
+    border: 1px solid #8ab4f8;
+    background: #ffffff;
+}
+
+QComboBox {
+    min-height: 22px;
+    padding-right: 28px;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 24px;
+}
+
+QPushButton {
+    background: #0f172a;
+    color: #ffffff;
+    border: 1px solid #0f172a;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background: #1e293b;
+    border-color: #1e293b;
+}
+
+QPushButton:pressed {
+    background: #0b1220;
+    border-color: #0b1220;
+}
+
+QPushButton:disabled {
+    background: #e5e7eb;
+    color: #94a3b8;
+    border-color: #e5e7eb;
+}
+
+QPushButton#secondaryButton {
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #cfd6df;
+}
+
+QPushButton#secondaryButton:hover {
+    background: #f8fafc;
+    border-color: #b8c2cf;
+}
+
+QPushButton#mutedButton,
+QPushButton#mutedButton:disabled {
+    background: #eef2f7;
+    color: #64748b;
+    border: 1px solid #d8e0ea;
+}
+
+QProgressBar {
+    border: 1px solid #dde3eb;
+    border-radius: 9px;
+    background: #f8fafc;
+    text-align: center;
+    min-height: 18px;
+    color: #334155;
+}
+
+QProgressBar::chunk {
+    background: #2563eb;
+    border-radius: 8px;
+}
+
+QCheckBox {
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    border: 1px solid #c6ced8;
+    background: #ffffff;
+}
+
+QCheckBox::indicator:checked {
+    background: #2563eb;
+    border: 1px solid #2563eb;
+}
+
+#titleLabel {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+}
+
+#estimateLabel {
+    font-weight: 600;
+    color: #0f766e;
+}
+
+#summaryLabel {
+    color: #475569;
+}
+
+#logOutput {
+    background: #fcfdff;
+    border: 1px solid #dde3eb;
+    color: #334155;
+}
