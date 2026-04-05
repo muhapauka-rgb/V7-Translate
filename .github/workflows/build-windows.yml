@@ -48,13 +48,19 @@ jobs:
           $env:PYINSTALLER_CONFIG_DIR = Join-Path $PWD ".pyinstaller"
           pyinstaller AgatikaWindows.spec --noconfirm
 
-      - name: Package distribution
+      - name: Verify packaged app
         shell: pwsh
         run: |
-          Compress-Archive -Path "dist/Переводчик Агатика" -DestinationPath "dist/agatika-windows.zip" -Force
+          if (-not (Test-Path "dist/Переводчик Агатика/Переводчик Агатика.exe")) {
+            throw "Windows executable was not created."
+          }
+
+          if (-not (Test-Path "dist/Переводчик Агатика/_internal/assets/argos/en_ru.argosmodel")) {
+            throw "Bundled Argos model is missing from the packaged app."
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: agatika-windows
-          path: dist/agatika-windows.zip
+          path: dist/Переводчик Агатика

@@ -4,7 +4,6 @@ from pathlib import Path
 
 APP_NAME = "Переводчик Агатика"
 BASE_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT_DIR = Path.home() / "Downloads" if (Path.home() / "Downloads").exists() else BASE_DIR / "output"
 
 SUPPORTED_EXTENSIONS = {".mp3", ".m4a", ".wav", ".mp4", ".mov"}
 
@@ -21,6 +20,41 @@ USER_DATA_DIR = _get_user_data_dir()
 STATE_DIR = USER_DATA_DIR / "state"
 TEMP_DIR = USER_DATA_DIR / "temp"
 ESTIMATE_HISTORY_PATH = STATE_DIR / "estimate_history.json"
+
+
+def _get_windows_downloads_dir() -> Path | None:
+    candidates = []
+    user_profile = os.environ.get("USERPROFILE")
+    if user_profile:
+        candidates.append(Path(user_profile) / "Downloads")
+
+    one_drive = os.environ.get("OneDrive")
+    if one_drive:
+        candidates.append(Path(one_drive) / "Downloads")
+
+    candidates.append(Path.home() / "Downloads")
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    return None
+
+
+def _get_default_output_dir() -> Path:
+    if sys.platform.startswith("win"):
+        downloads_dir = _get_windows_downloads_dir()
+        if downloads_dir and downloads_dir.exists():
+            return downloads_dir
+
+    downloads_dir = Path.home() / "Downloads"
+    if downloads_dir.exists():
+        return downloads_dir
+
+    return USER_DATA_DIR / "output"
+
+
+DEFAULT_OUTPUT_DIR = _get_default_output_dir()
 
 
 def get_resource_path(relative_path: str) -> Path:
