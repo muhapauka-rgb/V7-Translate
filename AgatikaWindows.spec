@@ -17,6 +17,11 @@ hiddenimports = [
     "PySide6.QtGui",
     "PySide6.QtWidgets",
     "PySide6.QtPrintSupport",
+    "argostranslate.package",
+    "argostranslate.networking",
+    "argostranslate.settings",
+    "argostranslate.tokenizer",
+    "argostranslate.utils",
 ]
 
 argos_assets_dir = project_dir / "assets" / "argos"
@@ -24,7 +29,7 @@ if argos_assets_dir.exists():
     for argos_model_path in sorted(argos_assets_dir.glob("*.argosmodel")):
         datas.append((str(argos_model_path), "assets/argos"))
 
-for package_name in ["faster_whisper", "ctranslate2", "argostranslate", "docx"]:
+for package_name in ["faster_whisper", "ctranslate2", "docx"]:
     pkg_datas, pkg_binaries, pkg_hiddenimports = collect_all(package_name)
     datas += pkg_datas
     binaries += pkg_binaries
@@ -32,6 +37,7 @@ for package_name in ["faster_whisper", "ctranslate2", "argostranslate", "docx"]:
 
 hiddenimports += collect_submodules("services")
 hiddenimports += collect_submodules("app")
+datas += collect_data_files("argostranslate")
 datas += collect_data_files("PySide6")
 
 
@@ -44,7 +50,17 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["tkinter", "pytest", "tests", "PySide6.examples", "PySide6.support"],
+    excludes=[
+        "tkinter",
+        "pytest",
+        "tests",
+        "PySide6.examples",
+        "PySide6.support",
+        "argostranslate.translate",
+        "stanza",
+        "stanza.resources",
+        "torch",
+    ],
     noarchive=False,
 )
 pyz = PYZ(a.pure)

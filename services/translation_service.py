@@ -12,8 +12,6 @@ LogCallback = Callable[[str], None]
 
 
 class TranslationService:
-    _argos_patched = False
-
     @staticmethod
     def translate_segments(
         segments: list[Segment],
@@ -49,107 +47,33 @@ class TranslationService:
     def _build_argos_translator():
         try:
             import argostranslate.package
-            import argostranslate.translate
+            import ctranslate2
         except ImportError as exc:
             raise UserFacingError(
                 "Для локального перевода не установлен argostranslate. "
                 "Либо установите зависимости, либо снимите галочку перевода."
             ) from exc
 
-        TranslationService._patch_argos_translation(argostranslate.translate)
         TranslationService._install_bundled_argos_model(
             argostranslate_package_module=argostranslate.package,
-            argostranslate_translate_module=argostranslate.translate,
         )
 
-        languages = argostranslate.translate.get_installed_languages()
-        from_language = next((language for language in languages if language.code == "en"), None)
-        to_language = next((language for language in languages if language.code == "ru"), None)
-
-        if not from_language or not to_language:
-            raise UserFacingError(
-                "Локальный переводчик не настроен. Установите языковую модель Argos Translate en -> ru "
-                "или отключите перевод в интерфейсе."
-            )
-
-        translation = from_language.get_translation(to_language)
-        if translation is None:
+        package_obj = TranslationService._find_installed_argos_package(
+            argostranslate_package_module=argostranslate.package,
+        )
+        if package_obj is None:
             raise UserFacingError(
                 "Языковая пара en -> ru не найдена в Argos Translate. "
                 "Проверьте, что нужная модель установлена."
             )
 
-        return translation
-
-    @staticmethod
-    def _patch_argos_translation(argos_translate_module) -> None:
-        if TranslationService._argos_patched:
-            return
-
-        original_apply = argos_translate_module.apply_packaged_translation
-
-        def safe_apply_packaged_translation(pkg, input_text, translator, num_hypotheses=4):
-            try:
-                return original_apply(pkg, input_text, translator, num_hypotheses)
-            except TypeError as exc:
-                if "typing.Self" not in str(exc):
-                    raise
-
-                sentences = TranslationService._split_text_for_argos(input_text)
-                tokenized = [pkg.tokenizer.encode(sentence) for sentence in sentences]
-
-                target_prefix = None
-                if getattr(pkg, "target_prefix", ""):
-                    target_prefix = [[pkg.target_prefix]] * len(tokenized)
-
-                translated_batches = translator.translate_batch(
-                    tokenized,
-                    target_prefix=target_prefix,
-                    replace_unknowns=True,
-                    max_batch_size=32,
-                    beam_size=max(num_hypotheses, 4),
-                    num_hypotheses=num_hypotheses,
-                )
-
-                hypotheses = [
-                    argos_translate_module.Hypothesis("", 0) for _ in range(num_hypotheses)
-                ]
-
-                for sentence_batch in translated_batches:
-                    for hypothesis_index in range(num_hypotheses):
-                        sentence_tokens = sentence_batch.hypotheses[hypothesis_index]
-                        decoded = pkg.tokenizer.decode(sentence_tokens).strip()
-                        current_value = hypotheses[hypothesis_index].value
-                        combined_value = f"{current_value} {decoded}".strip()
-                        score = 0.0
-                        if hypothesis_index < len(sentence_batch.scores):
-                            score = float(sentence_batch.scores[hypothesis_index])
-                        combined_score = hypotheses[hypothesis_index].score + score
-                        hypotheses[hypothesis_index] = argos_translate_module.Hypothesis(
-                            combined_value,
-                            combined_score,
-                        )
-
-                return hypotheses
-
-        argos_translate_module.apply_packaged_translation = safe_apply_packaged_translation
-        TranslationService._argos_patched = True
+        return DirectArgosTranslator(package_obj, ctranslate2)
 
     @staticmethod
     def _install_bundled_argos_model(
         argostranslate_package_module,
-        argostranslate_translate_module,
     ) -> None:
-        installed_languages = argostranslate_translate_module.get_installed_languages()
-        has_en_ru = False
-        for language in installed_languages:
-            if language.code != "en":
-                continue
-            has_en_ru = any(translation.to_lang.code == "ru" for translation in language.translations_from)
-            if has_en_ru:
-                break
-
-        if has_en_ru:
+        if TranslationService._find_installed_argos_package(argostranslate_package_module) is not None:
             return
 
         package_path = TranslationService._find_bundled_argos_model()
@@ -160,6 +84,23 @@ class TranslationService:
             argostranslate_package_module.install_from_path(str(package_path))
         except Exception:
             return
+
+    @staticmethod
+    def _find_installed_argos_package(argostranslate_package_module):
+        try:
+            installed_packages = argostranslate_package_module.get_installed_packages()
+        except Exception:
+            return None
+
+        return next(
+            (
+                package_obj
+                for package_obj in installed_packages
+                if getattr(package_obj, "from_code", None) == "en"
+                and getattr(package_obj, "to_code", None) == "ru"
+            ),
+            None,
+        )
 
     @staticmethod
     def _find_bundled_argos_model() -> Optional[Path]:
@@ -193,3 +134,44 @@ class TranslationService:
             chunks.append(current)
 
         return chunks or [text]
+
+
+class DirectArgosTranslator:
+    def __init__(self, package_obj, ctranslate2_module) -> None:
+        self.package_obj = package_obj
+        self.translator = ctranslate2_module.Translator(
+            str(package_obj.package_path / "model"),
+            device="cpu",
+        )
+
+    def translate(self, input_text: str) -> str:
+        paragraphs = input_text.split("\n")
+        translated_paragraphs = [self._translate_paragraph(paragraph) for paragraph in paragraphs]
+        return "\n".join(translated_paragraphs)
+
+    def _translate_paragraph(self, paragraph: str) -> str:
+        if not paragraph.strip():
+            return paragraph
+
+        sentences = TranslationService._split_text_for_argos(paragraph)
+        tokenized = [self.package_obj.tokenizer.encode(sentence) for sentence in sentences]
+
+        target_prefix = None
+        if getattr(self.package_obj, "target_prefix", ""):
+            target_prefix = [[self.package_obj.target_prefix]] * len(tokenized)
+
+        translated_batches = self.translator.translate_batch(
+            tokenized,
+            target_prefix=target_prefix,
+            replace_unknowns=True,
+            max_batch_size=32,
+            beam_size=4,
+            num_hypotheses=1,
+        )
+
+        decoded_sentences = []
+        for sentence_batch in translated_batches:
+            sentence_tokens = sentence_batch.hypotheses[0]
+            decoded_sentences.append(self.package_obj.tokenizer.decode(sentence_tokens).strip())
+
+        return " ".join(part for part in decoded_sentences if part).strip()
