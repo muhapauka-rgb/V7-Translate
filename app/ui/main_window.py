@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from PySide6.QtGui import QIcon
 
 from app.config import APP_NAME, DEFAULT_OUTPUT_DIR, MODEL_PRESETS, get_resource_path
 from app.core.worker import ProcessingWorker
@@ -92,6 +93,9 @@ class MainWindow(QMainWindow):
         }
 
         self.setWindowTitle(APP_NAME)
+        app_icon_path = get_resource_path("assets/icons/belka-512.png")
+        if app_icon_path.exists():
+            self.setWindowIcon(QIcon(str(app_icon_path)))
         self.resize(780, 620)
         self.setMinimumSize(720, 560)
 

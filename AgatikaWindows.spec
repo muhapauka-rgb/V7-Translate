@@ -7,6 +7,9 @@ project_dir = Path.cwd()
 datas = [
     (str(project_dir / "app" / "ui" / "main_window.qss"), "app/ui"),
     (str(project_dir / "app" / "ui" / "INTERFACE_GUIDE.md"), "app/ui"),
+    (str(project_dir / "assets" / "icons" / "belka.svg"), "assets/icons"),
+    (str(project_dir / "assets" / "icons" / "belka-256.png"), "assets/icons"),
+    (str(project_dir / "assets" / "icons" / "belka-512.png"), "assets/icons"),
 ]
 binaries = []
 hiddenimports = [
@@ -57,7 +60,7 @@ exe = EXE(
     strip=False,
     upx=False,
     console=False,
-    icon=None,
+    icon=str(project_dir / "assets" / "icons" / "belka.ico"),
 )
 
 coll = COLLECT(

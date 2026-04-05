@@ -30,7 +30,11 @@ OPTIONS = {
     "resources": [
         "app/ui/main_window.qss",
         "app/ui/INTERFACE_GUIDE.md",
+        "assets/icons/belka.svg",
+        "assets/icons/belka-256.png",
+        "assets/icons/belka-512.png",
     ],
+    "iconfile": "assets/icons/belka.icns",
     "plist": {
         "CFBundleName": APP_NAME,
         "CFBundleDisplayName": APP_NAME,

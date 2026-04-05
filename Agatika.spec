@@ -7,6 +7,9 @@ project_dir = Path.cwd()
 datas = [
     (str(project_dir / "app" / "ui" / "main_window.qss"), "app/ui"),
     (str(project_dir / "app" / "ui" / "INTERFACE_GUIDE.md"), "app/ui"),
+    (str(project_dir / "assets" / "icons" / "belka.svg"), "assets/icons"),
+    (str(project_dir / "assets" / "icons" / "belka-256.png"), "assets/icons"),
+    (str(project_dir / "assets" / "icons" / "belka-512.png"), "assets/icons"),
 ]
 binaries = []
 hiddenimports = [
@@ -67,7 +70,7 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name="Переводчик Агатика.app",
-    icon=None,
+    icon=str(project_dir / "assets" / "icons" / "belka.icns"),
     bundle_identifier="com.muhapauka.agatika-translator",
     info_plist={
         "CFBundleName": "Переводчик Агатика",
