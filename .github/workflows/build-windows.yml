@@ -39,6 +39,9 @@ jobs:
           New-Item -ItemType Directory -Force -Path assets/argos | Out-Null
           python -c "import shutil; from pathlib import Path; import argostranslate.package as p; p.update_package_index(); pkg=next(x for x in p.get_available_packages() if x.from_code=='en' and x.to_code=='ru'); downloaded=Path(pkg.download()); target=Path('assets/argos') / 'en_ru.argosmodel'; shutil.copyfile(downloaded, target); print(target)"
 
+      - name: Remove unused training dependencies before packaging
+        run: python -m pip uninstall -y stanza torch
+
       - name: Build Windows executable
         shell: pwsh
         run: |
